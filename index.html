@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>System Override // פריצת מערכת</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Heebo:wght@400;700&display=swap');
+
+        body {
+            background-color: #000;
+            color: #00ff00;
+            font-family: 'Courier Prime', 'Courier New', monospace;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        .crt-overlay {
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%, 
+                rgba(0, 0, 0, 0.25) 50%
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 50;
+        }
+
+        .glitch-text {
+            animation: glitch 1s linear infinite;
+        }
+
+        @keyframes glitch {
+            2%, 64% { transform: translate(2px,0) skew(0deg); }
+            4%, 60% { transform: translate(-2px,0) skew(0deg); }
+            62% { transform: translate(0,0) skew(5deg); }
+        }
+
+        .blink {
+            animation: blinker 1s linear infinite;
+        }
+
+        @keyframes blinker {
+            50% { opacity: 0; }
+        }
+
+        /* Scrollbar hiding */
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+
+        .terminal-line {
+            opacity: 0;
+            animation: fadeIn 0.1s forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+        
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+            transform: translate3d(0, 0, 0);
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col items-center justify-center relative">
+
+    <!-- CRT Screen Effect Overlay -->
+    <div class="crt-overlay"></div>
+
+    <!-- Hacking Interface (Hidden initially) -->
+    <div id="hack-interface" class="hidden w-full h-full p-4 flex flex-col relative z-30">
+        
+        <!-- Header -->
+        <div class="flex justify-between items-center border-b border-green-800 pb-2 mb-2">
+            <div class="flex items-center space-x-2 space-x-reverse">
+                <i data-lucide="shield-alert" class="w-5 h-5 text-red-500 animate-pulse"></i>
+                <span class="text-red-500 font-bold text-sm">ROOT ACCESS: PENDING</span>
+            </div>
+            <div class="text-xs text-green-700 font-mono" id="timer">00:00:00</div>
+        </div>
+
+        <!-- Main Terminal -->
+        <div id="terminal" class="flex-grow overflow-y-auto font-mono text-sm leading-tight space-y-1 mb-4 text-green-400 text-left" dir="ltr">
+            <!-- Lines will be injected here -->
+        </div>
+
+        <!-- Fake Progress Box -->
+        <div class="border border-green-900 bg-gray-900/50 p-4 rounded mb-4" id="progress-container">
+            <div class="flex justify-between text-xs mb-1 text-green-400">
+                <span id="current-task">INITIALIZING...</span>
+                <span id="percentage">0%</span>
+            </div>
+            <div class="w-full bg-green-900/30 h-2 rounded overflow-hidden">
+                <div id="progress-bar" class="h-full bg-green-500 shadow-[0_0_10px_rgba(0,255,0,0.8)]" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Geo Location Fake -->
+        <div class="grid grid-cols-2 gap-2 text-xs text-green-700 font-mono border-t border-green-900 pt-2">
+            <div>LAT: <span id="lat">32.0853</span></div>
+            <div>LNG: <span id="lng">34.7818</span></div>
+            <div>IP: <span id="ip">192.168.1.105</span></div>
+            <div>DEVICE: <span id="device">UNKNOWN</span></div>
+        </div>
+    </div>
+
+    <!-- Success/Hacked Modal -->
+    <div id="success-modal" class="hidden absolute inset-0 z-50 bg-black flex flex-col items-center justify-center p-6 text-center">
+        <div class="border-4 border-red-600 p-8 w-full max-w-sm relative bg-red-950/20 backdrop-blur-sm rounded-lg shake">
+            <i data-lucide="skull" class="w-24 h-24 text-red-600 mx-auto mb-4 animate-bounce"></i>
+            <h2 class="text-4xl font-bold text-red-600 mb-2 glitch-text">HACKED</h2>
+            <p class="text-red-400 font-sans font-bold text-lg dir-rtl">המכשיר נפרץ בהצלחה.</p>
+            <div class="mt-6 text-xs text-red-800 font-mono">
+                DATA TRANSFER COMPLETE.<br>
+                LOCATION TRACKED.<br>
+                CAMERA ACCESSED.
+            </div>
+        </div>
+        <button onclick="location.reload()" class="mt-12 text-gray-600 hover:text-gray-400 text-xs uppercase tracking-widest">
+            RESET SIMULATION
+        </button>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // Data for simulation
+        const logs = [
+            "Initializing protocol SSH-2...",
+            "Connecting to remote host 127.0.0.1...",
+            "Bypassing firewall security...",
+            "Brute-forcing PIN code...",
+            "Access granted to Kernel...",
+            "Mounting file system /dev/sda1...",
+            "Searching for 'WhatsApp' databases...",
+            "Decrypting msgstore.db.crypt14...",
+            "Downloading 'DCIM/Camera'...",
+            "Uploading 428 photos to external server...",
+            "Accessing Microphone...",
+            "Recording ambient audio...",
+            "Accessing Front Camera...",
+            "Face ID biometric data extracted...",
+            "Scanning Banking Apps...",
+            "Copying 'Passwords.txt'...",
+            "Installing remote trojan...",
+            "Hiding tracks...",
+            "Clearing system logs...",
+            "SYSTEM COMPROMISED."
+        ];
+
+        const terminal = document.getElementById('terminal');
+        const progressBar = document.getElementById('progress-bar');
+        const percentageText = document.getElementById('percentage');
+        const taskText = document.getElementById('current-task');
+        const latSpan = document.getElementById('lat');
+        const lngSpan = document.getElementById('lng');
+
+        // Random device name
+        const devices = ["IPHONE_15_PRO", "SAMSUNG_S24", "PIXEL_8_PRO", "XIAOMI_14"];
+        document.getElementById('device').innerText = devices[Math.floor(Math.random() * devices.length)];
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function randomString(length) {
+            let result = '';
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+            for (let i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * characters.length));
+            }
+            return result;
+        }
+
+        async function startHack() {
+            document.getElementById('hack-interface').classList.remove('hidden');
+            
+            // Start timer
+            let seconds = 0;
+            setInterval(() => {
+                seconds++;
+                const date = new Date(0);
+                date.setSeconds(seconds);
+                document.getElementById('timer').innerText = date.toISOString().substr(11, 8);
+            }, 1000);
+
+            // Start coordinate randomization
+            setInterval(() => {
+                latSpan.innerText = (32 + Math.random()).toFixed(6);
+                lngSpan.innerText = (34 + Math.random()).toFixed(6);
+            }, 500);
+
+            // Run lines
+            for (let i = 0; i < logs.length; i++) {
+                const p = document.createElement('div');
+                p.className = 'terminal-line';
+                
+                // Sometimes add random code chunks
+                if (Math.random() > 0.7) {
+                    const code = document.createElement('div');
+                    code.className = 'text-green-800 text-xs mb-1';
+                    code.innerText = `> ${randomString(40)}`;
+                    terminal.appendChild(code);
+                }
+
+                p.innerHTML = `<span class="text-green-600 mr-2">[${new Date().toLocaleTimeString('en-GB')}]</span> ${logs[i]}`;
+                terminal.appendChild(p);
+                terminal.scrollTop = terminal.scrollHeight;
+
+                // Update Progress
+                const progress = Math.round(((i + 1) / logs.length) * 100);
+                progressBar.style.width = `${progress}%`;
+                percentageText.innerText = `${progress}%`;
+                taskText.innerText = logs[i].split('...')[0].toUpperCase();
+
+                // Dynamic wait time based on "complexity"
+                let waitTime = Math.floor(Math.random() * 800) + 200;
+                if (logs[i].includes("Downloading")) waitTime = 2000;
+                if (logs[i].includes("Decrypting")) waitTime = 1500;
+                
+                await sleep(waitTime);
+            }
+
+            // Finalizing
+            await sleep(1000);
+            showSuccess();
+        }
+
+        // Auto-start immediately when page loads
+        window.addEventListener('load', () => {
+            setTimeout(startHack, 500); // Small delay for realism
+        });
+
+        function showSuccess() {
+            document.getElementById('hack-interface').classList.add('hidden');
+            document.getElementById('success-modal').classList.remove('hidden');
+            
+            // Vibration effect if supported (mobile only)
+            if (navigator.vibrate) {
+                navigator.vibrate([200, 100, 200]);
+            }
+        }
+    </script>
+</body>
+</html>
